@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block title %}
+Student Management
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+  <h1 class="text-center" style="color: #0e758e; margin-bottom: 25px; font-weight: bold;">Student Details Management</h1>
+  <div class="row" style="margin-bottom: 40px; margin-left: -180px; margin-right: -180px">
+    
+    <!-- Student Information Section -->
+    <div class="col-lg-6 col-md-12">
+      <div class="card shadow-sm h-100">
+        <div class="card-header text-white bg-dark">
+          <h5 class="mb-3">Student Information</h5>
+          <!-- Student Counter -->
+          <div class="d-flex justify-content-between align-items-center mt-2">
+            <div>
+              <strong>Total Students:</strong> <span id="student-counter">{{ students|length }}</span>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-2">
+              <label for="sort-students">Sort by: &#20</label>
+              <select id="sort-students" class="form-control w-auto" onchange="sortStudents(this.value)">
+                <option value=""disabled selected>Please Select</option>
+                <option value="id">ID</option>
+                <option value="name">Name</option>
+                <option value="age">Age</option>
+                <option value="birthday">Birthday</option>
+              </select>
+            </div> 
+          </div>
+              <!-- Add Encryption/Decryption Buttons -->
+          <div class="margin-bottom">
+            <form action="{{ url_for('views.encrypt_students') }}" method="POST" class="d-inline">
+              <button type="submit" class="btn btn-warning btn-sm">Encrypt All</button>
+            </form>
+            <form action="{{ url_for('views.decrypt_students') }}" method="POST" class="d-inline ml-2">
+              <button type="submit" class="btn btn-success btn-sm">Decrypt All</button>
+            </form>
+          </div>
+        </div>
+        <div class="card-body overflow-auto" style="max-height: 80vh;">
+          <ul class="list-group list-group-flush" id="student-list">
+            {% if students %}
+            {% for student in students %}
+            <li class="list-group-item" id="student-{{ student.student_id }}">
+              <div>
+                <strong>ID:</strong> {{ student.student_id }}<br>
+                <strong>Full Name:</strong> {{ student.name }} {{ student.middle_name or "" }} {{ student.last_name }} {{ student.suffix or "" }}<br>
+                <strong>Birthday:</strong> {{ student.birthday }}<br>
+                <strong>Age:</strong> {{ student.age }}<br>
+                <strong>Sex:</strong> {{ student.sex }}<br>
+                <strong>Address:</strong> {{ student.house_number }} {{ student.street }}, {{ student.city }}, {{ student.state }}, {{ student.zip_code }}, {{ student.country }}<br>
+                <strong>Contact Number:</strong> {{ student.contact_number }}<br>
+                <strong>Course:</strong> {{ student.course_year_level }}<br>
+                <strong>College:</strong> {{ student.college }}<br>
+                <strong>PLM Email:</strong> {{ student.plm_email }}<br>
+                <strong>Registration Status:</strong> {{ student.registration_status }}
+                </div>
+                <!-- Delete Button -->
+                <button
+                  type="button"
+                  class="btn btn-sm btn-danger mt-2"
+                  onClick="deleteStudent('{{ student.student_id }}')"
+                >
+                  <i class="fa fa-trash"></i> Delete
+                </button>
+            </li>
+            {% endfor %}
+            {% else %}
+            <li class="list-group-item text-center text-muted">No student records available</li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </div>
+
+   <!-- Add Student Details Section -->
+   <div class="col-lg-6 col-md-12">
+    <form method="POST" class="shadow p-4 rounded bg-white">
+      <h5 class="mb-3">Add Student Details</h5>
+      <div class="row">
+        <div class="col-md-12 mb-3">
+          <label for="student_id">Student ID *</label>
+          <input type="text" name="student_id" id="student_id" class="form-control" required pattern="\d{4}-\d{5}" placeholder="e.g., 2021-00001" value="{{ request.form.get('student_id', '') }}" />
+        </div>
+        <div class="col-md-4 mb-3">
+          <label for="name">First Name *</label>
+          <input type="text" name="name" id="name" class="form-control" required pattern="[A-Za-z ]+" placeholder="First Name" value="{{ request.form.get('name', '') }}" />
+        </div>
+        <div class="col-md-4 mb-3">
+          <label for="middle_name">Middle Name</label>
+          <input type="text" name="middle_name" id="middle_name" class="form-control" pattern="[A-Za-z ]+" placeholder="Middle Name" value="{{ request.form.get('middle_name', '') }}" />
+        </div>
+        <div class="col-md-4 mb-3">
+          <label for="last_name">Last Name *</label>
+          <input type="text" name="last_name" id="last_name" class="form-control" required pattern="[A-Za-z ]+" placeholder="Last Name" value="{{ request.form.get('last_name', '') }}" />
+        </div>
+        <div class="col-md-4 mb-3">
+          <label for="suffix">Suffix</label>
+          <input type="text" name="suffix" id="suffix" class="form-control" pattern="[A-Za-z ]+" placeholder="e.g., Jr." value="{{ request.form.get('suffix', '') }}" />
+        </div>
+        <div class="col-md-8 mb-3">
+          <label for="birthday">Birthday *</label>
+          <input type="date" name="birthday" id="birthday" class="form-control" required value="{{ request.form.get('birthday', '') }}" />
+        </div>
+        <div class="col-md-6 mb-3">
+          <label for="age">Age *</label>
+          <input type="number" name="age" id="age" class="form-control" required min="1" placeholder="Age" value="{{ request.form.get('age', '') }}" />
+        </div>
+        <div class="col-md-6 mb-3">
+          <label for="sex">Sex *</label>
+          <select name="sex" id="sex" class="form-control" required>
+            <option value="" disabled selected>Select Gender</option>
+            <option value="Male" {% if request.form.get('sex') == 'Male' %}selected{% endif %}>Male</option>
+            <option value="Female" {% if request.form.get('sex') == 'Female' %}selected{% endif %}>Female</option>
+            <option value="Other" {% if request.form.get('sex') == 'Other' %}selected{% endif %}>Other</option>
+          </select>
+        </div>
+        <div class="col-md-12 mb-3">
+          <label for="address">Address *</label>
+          <div class="row">
+            <div class="col-md-4">
+              <input type="text" name="country" id="country" class="form-control mb-2" placeholder="Country" required value="{{ request.form.get('country', '') }}" />
+            </div>
+            <div class="col-md-4">
+              <input type="text" name="state" id="state" class="form-control mb-2" placeholder="Region" required value="{{ request.form.get('state', '') }}" />
+            </div>
+            <div class="col-md-4">
+              <input type="text" name="city" id="city" class="form-control mb-2" placeholder="City" required value="{{ request.form.get('city', '') }}" />
+            </div>
+            <div class="col-md-6">
+              <input type="text" name="zip_code" id="zip_code" class="form-control mb-2" placeholder="Zip Code" required value="{{ request.form.get('zip_code', '') }}" />
+            </div>
+            <div class="col-md-6">
+              <input type="text" name="street" id="street" class="form-control mb-2" placeholder="Street" required value="{{ request.form.get('street', '') }}" />
+            </div>
+            <div class="col-md-12">
+              <input type="text" name="house_number" id="house_number" class="form-control mb-2" placeholder="House Number" required value="{{ request.form.get('house_number', '') }}" />
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 mb-3">
+          <label for="contact_number">Contact Number *</label>
+          <input type="tel" name="contact_number" id="contact_number" class="form-control" required pattern="\+?63\d{10}" placeholder="e.g., +639171234567" value="{{ request.form.get('contact_number', '') }}" />
+        </div>
+        <div class="col-md-6 mb-3">
+          <label for="course_year_level">Course *</label>
+          <select name="course_year_level" id="course_year_level" class="form-control" required>
+            <option value="" disabled selected>Select Course</option>
+            <option value="BS MATH 1-1" {% if request.form.get('course_year_level') == 'BS MATH 1-1' %}selected{% endif %}>BS MATH 1-1</option>
+            <option value="BS MATH 2-1" {% if request.form.get('course_year_level') == 'BS MATH 2-1' %}selected{% endif %}>BS MATH 2-1</option>
+            <option value="BS MATH 3-1" {% if request.form.get('course_year_level') == 'BS MATH 3-1' %}selected{% endif %}>BS MATH 3-1</option>
+            <option value="BS MATH 4-1" {% if request.form.get('course_year_level') == 'BS MATH 4-1' %}selected{% endif %}>BS MATH 4-1</option>
+          </select>
+        </div>
+        <div class="col-md-6 mb-3">
+          <label for="college">College *</label>
+          <select name="college" id="college" class="form-control" required>
+            <option value="College of Science" {% if request.form.get('college') == 'College of Science' %}selected{% endif %}>College of Science</option>
+          </select>
+        </div>
+        <div class="col-md-6 mb-3">
+          <label for="plm_email">PLM Email Address *</label>
+          <input type="email" name="plm_email" id="plm_email" class="form-control" required placeholder="e.g., example@plm.edu.ph" value="{{ request.form.get('plm_email', '') }}" />
+        </div>
+        <div class="col-md-6 mb-3">
+          <label for="registration_status">Registration Status *</label>
+          <select name="registration_status" id="registration_status" class="form-control" required>
+            <option value="Regular" {% if request.form.get('registration_status') == 'Regular' %}selected{% endif %}>Regular</option>
+            <option value="Irregular" {% if request.form.get('registration_status') == 'Irregular' %}selected{% endif %}>Irregular</option>
+          </select>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block btn-sm">Add Student</button>
+    </form>
+  </div>
+</div>
+</div>
+
+
+<script>
+  // Update student counter
+function updateStudentCounter() {
+  const studentCounter = document.getElementById("student-counter");
+  const studentList = document.getElementById("student-list");
+  studentCounter.textContent = studentList.children.length;
+}
+
+// Ensure counter updates when a student is deleted
+document.getElementById("student-list").addEventListener("DOMNodeRemoved", updateStudentCounter);
+
+// Delete student
+  function deleteStudent(studentId) {
+  if (confirm("Are you sure you want to delete this student?")) {
+    fetch('/delete-student', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ student_id: studentId }),
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          document.getElementById(`student-${studentId}`).remove();
+          alert("Student successfully deleted.");
+        } else {
+          alert("Failed to delete student. Please try again.");
+        }
+      })
+      .catch(error => console.error("Error:", error));
+  }
+}
+
+// Sort students
+function sortStudents(sortBy) {
+  fetch('/sort', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ sort_by: sortBy }),
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        const studentList = document.getElementById("student-list");
+        studentList.innerHTML = "";  // Clear existing student list
+        data.students.forEach(student => {
+          const studentCard = createStudentCard(student);  // You should define this function to generate the student card
+          studentList.appendChild(studentCard);
+        });
+      } else {
+        alert("Failed to sort students. Please try again.");
+      }
+    })
+    .catch(error => console.error("Error:", error));  
+}
+
+// Function to generate student cards dynamically
+function createStudentCard(student) {
+  const li = document.createElement("li");
+  li.classList.add("list-group-item");
+  li.id = `student-${student.student_id}`;
+
+  li.innerHTML = `
+    <div>
+      <strong>ID:</strong> ${student.student_id}<br>
+      <strong>Full Name:</strong> ${student.name} ${student.middle_name || ""} ${student.last_name} ${student.suffix || ""}<br>
+      <strong>Birthday:</strong> ${student.birthday}<br>
+      <strong>Age:</strong> ${student.age}<br>
+      <strong>Sex:</strong> ${student.sex}<br>
+      <strong>Address:</strong> ${student.address}<br>
+      <strong>Contact Number:</strong> ${student.contact_number}<br>
+      <strong>Course:</strong> ${student.course_year_level}<br>
+      <strong>College:</strong> ${student.college}<br>
+      <strong>PLM Email:</strong> ${student.plm_email}<br>
+      <strong>Registration Status:</strong> ${student.registration_status}
+    </div>
+    <button type="button" class="btn btn-sm btn-danger mt-2" onclick="deleteStudent('${student.student_id}')">
+      <i class="fa fa-trash"></i> Delete
+    </button>
+  `;
+  return li;
+}
+
+</script>
+{% endblock %}
